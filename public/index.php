@@ -27,6 +27,11 @@ try {
     $di = new \Phalcon\DI\FactoryDefault();
 
     /**
+     * The router component
+     */
+    $di->set('router', $config->router);
+
+    /**
      * The URL component is used to generate all kind of urls in the application
      */
     $di->set(
@@ -50,20 +55,28 @@ try {
         }
     );
 
-    /**
-     * Database connection is created based in the parameters defined in the configuration file
-     */
-    $di->set(
-        'db',
-        function () use ($config) {
-            return new \Phalcon\Db\Adapter\Pdo\Mysql(array(
-                "host" => $config->database->host,
-                "username" => $config->database->username,
-                "password" => $config->database->password,
-                "dbname" => $config->database->name
-            ));
-        }
-    );
+    $di->set('mongo', function() {
+            $mongo = new MongoClient();
+            return $mongo->phalcon_blog;
+        }, true);
+    
+    $di->set('collectionManager', 'Phalcon\Mvc\Collection\Manager', true);
+//    /**
+//     * Database connection is created based in the parameters defined in the configuration file
+//     */
+//    $di->set(
+//        'db',
+//        function () use ($config) {
+//            return new \Phalcon\Db\Adapter\Pdo\Mysql(
+//                array(
+//                    "host" => $config->database->host,
+//                    "username" => $config->database->username,
+//                    "password" => $config->database->password,
+//                    "dbname" => $config->database->name
+//                )
+//            );
+//        }
+//    );
 
     /**
      * If the configuration specify the use of metadata adapter use it or use memory otherwise
@@ -99,7 +112,11 @@ try {
     $application->setDI($di);
     echo $application->handle()->getContent();
 
-} catch (Phalcon\Exception $e) {
+}
+catch(Phalcon\Mvc\Dispatcher\Exception $e){
+    print_r($e);
+}
+catch (Phalcon\Exception $e) {
     echo $e->getMessage();
 } catch (PDOException $e) {
     echo $e->getMessage();
